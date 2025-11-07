@@ -1,0 +1,5 @@
+FROM alpine:latest
+RUN apk add --no-cache bash coreutils
+COPY syn_sim.sh /syn_sim.sh
+RUN chmod +x /syn_sim.sh
+CMD ["/syn_sim.sh"]

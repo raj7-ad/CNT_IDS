@@ -1,0 +1,4 @@
+FROM python:3.11-alpine
+RUN pip install --no-cache-dir requests
+COPY brute_web.py /brute_web.py
+CMD ["python","/brute_web.py"]

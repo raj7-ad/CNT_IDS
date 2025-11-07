@@ -1,0 +1,5 @@
+FROM alpine:latest
+RUN apk add --no-cache bash coreutils
+COPY port_scan.sh /port_scan.sh
+RUN chmod +x /port_scan.sh
+CMD ["/port_scan.sh"]

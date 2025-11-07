@@ -1,0 +1,91 @@
+version: '3.8'
+services:
+  nginx:
+    image: nginx:stable
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./reverse_proxy/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./reverse_proxy/blocked.conf:/etc/nginx/conf.d/blocked.conf:rw
+      - ./var/log/nginx:/var/log/nginx
+    networks:
+      - honey_net
+
+  web_server:
+    build: ./web_server
+    container_name: web_server
+    networks:
+      - honey_net
+    volumes:
+      - ./var/log/web:/var/log/web
+
+  dns_server:
+    build: ./dns_server
+    container_name: dns_server
+    networks:
+      - honey_net
+    ports:
+      - "5353:5353/udp"
+    volumes:
+      - ./var/log/dns:/var/log
+
+  attacker_portscan:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.portscan
+    container_name: attacker_portscan
+    environment:
+      - TARGET_HOST=web_server
+      - START_PORT=8000
+      - END_PORT=8005
+    networks:
+      - honey_net
+
+  attacker_synsim:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.synsim
+    container_name: attacker_synsim
+    networks:
+      - honey_net
+
+  attacker_brute:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.brute
+    container_name: attacker_brute
+    environment:
+      - TARGET=http://nginx
+      - INTERVAL=2
+    networks:
+      - honey_net
+
+  attacker_dnsexfil:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile.dnsexfil
+    container_name: attacker_dnsexfil
+    environment:
+      - DNS_SERVER=dns_server
+      - INTERVAL=3
+    networks:
+      - honey_net
+
+  agent:
+    build:
+      context: ./autogen
+      dockerfile: Dockerfile.autogen
+    container_name: autogen_agent
+    environment:
+      - AUTO_APPLY_BLOCKS=false
+    volumes:
+      - ./var/log/nginx:/var/log/nginx
+      - ./var/log/dns:/var/log
+      - ./var/bad_ips.csv:/var/bad_ips.csv
+    networks:
+      - honey_net
+
+networks:
+  honey_net:
+    driver: bridge

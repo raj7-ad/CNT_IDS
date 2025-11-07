@@ -1,0 +1,4 @@
+FROM python:3.11-alpine
+RUN apk add --no-cache bind-tools
+COPY dns_exfil.py /dns_exfil.py
+CMD ["python","/dns_exfil.py"]

@@ -1,3 +1,4 @@
 .env
 cowrie_logs/
 nginx_logs/
+.env.example
